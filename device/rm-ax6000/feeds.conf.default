@@ -1,0 +1,7 @@
+src-git-full packages https://git.openwrt.org/feed/packages.git
+src-git-full luci https://git.openwrt.org/project/luci.git
+src-git-full routing https://git.openwrt.org/feed/routing.git
+src-git-full telephony https://git.openwrt.org/feed/telephony.git
+src-git NueXini_Packages https://github.com/NueXini/NueXini_Packages.git
+src-git sirpdboy https://github.com/sirpdboy/sirpdboy-package.git
+src-git holotr https://github.com/holotr/my-opw-packages.git
