@@ -18,6 +18,10 @@ on:
         description: 'SSH connection to Actions'
         required: false
         default: 'false'
+      MTARGET:
+        description: 'Build Tagrget'
+        required: false
+        default: 'mediatek_filogic/xiaomi_redmi-router-ax6000'
 
 permissions:
   contents: write
@@ -61,7 +65,11 @@ jobs:
         git config --global user.email "github-actions[bot]@users.noreply.github.com'"
         git config --global user.name "github-actions[bot]"
         echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
-        echo "MTARGET=mediatek_filogic/xiaomi_redmi-router-ax6000" >> $GITHUB_ENV
+        if [ !"${{github.event.inputs.MTARGET}}" ]; then
+          echo "MTARGET=mediatek_filogic/xiaomi_redmi-router-ax6000" >> $GITHUB_ENV
+        else
+          echo "MTARGET=${{github.event.inputs.MTARGET}}" >> $GITHUB_ENV
+        fi
 
     - name: Clone source code
       working-directory: /workdir
@@ -115,7 +123,7 @@ jobs:
 
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
-      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
+      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh != 'false') || contains(github.event.action, 'ssh')
       env:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -171,9 +179,9 @@ jobs:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         ARGS: "-avzr"
         SOURCE: firmware/${{env.MTARGET}}/*
-        REMOTE_HOST: op.tauri.cc
+        REMOTE_HOST: ${{ secrets.SSH_REMOTE_HOST }}
         REMOTE_PORT: '22'
-        REMOTE_USER: ubuntu
+        REMOTE_USER: ${{ secrets.SSH_REMOTE_USER }}
         TARGET: /mnt/openwrt/firmware/${{env.MTARGET}}/
     
     - name: Deploy packages to server
@@ -184,9 +192,9 @@ jobs:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         ARGS: "-avzr"
         SOURCE: packages/aarch64_cortex-a53/*
-        REMOTE_HOST: op.tauri.cc
+        REMOTE_HOST: ${{ secrets.SSH_REMOTE_HOST }}
         REMOTE_PORT: '22'
-        REMOTE_USER: ubuntu
+        REMOTE_USER: ${{ secrets.SSH_REMOTE_USER }}
         TARGET: /mnt/packages/aarch64_cortex-a53/
         
     - name: Upload firmware directory
