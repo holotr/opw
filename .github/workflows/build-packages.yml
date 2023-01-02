@@ -8,10 +8,9 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: Build RM-AX6000 official repo with cache
+name: Build A53 Packages
 
 on:
-  repository_dispatch:
   workflow_dispatch:
     inputs:
       ssh:
