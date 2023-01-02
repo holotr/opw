@@ -30,3 +30,5 @@ date=`date +%m.%d.%Y`
 sed -i -e "/\(# \)\?REVISION:=/c\REVISION:=$date" -e '/VERSION_CODE:=/c\VERSION_CODE:=$(REVISION)' include/version.mk
 rm -rf package/feeds/holotr/my-default-settings/files/usr
 sed -i "s/%D %V, %C/%D %C by Tau'ri/" package/base-files/files/etc/banner
+sed -i "s/%D %V %C/%D %C by Tau'ri/" package/base-files/files/etc/openwrt_release
+curl -sfL https://github.com/holotr/opw/raw/master/device/rm-ax6000/patch/base-file.patch | patch -d './' -p1 --forward" || true
