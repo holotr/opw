@@ -99,7 +99,7 @@ jobs:
         chmod +x $DIY_P2_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
-        sed -i 's/# CONFIG_ALL .*/CONFIG_ALL=y/' .config
+        sed -r -i "s/(# )(CONFIG_PACKAGE_luci?.*)(\s)(is not set)/\2=m/g" 2.config
         
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
@@ -135,6 +135,7 @@ jobs:
         shopt -s extglob
         mkdir -p packages/aarch64_cortex-a53
         cp -rf openwrt/bin/targets/*/*/packages/*.ipk packages/aarch64_cortex-a53 ||true
+        rm -rf packages/aarch64_cortex-a53/kernel*.ipk
         echo "::set-output name=status::success"
     
     - name: Deploy packages to server
