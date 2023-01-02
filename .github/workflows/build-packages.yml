@@ -1,0 +1,169 @@
+#
+# Copyright (c) 2019-2020 P3TERX <https://p3terx.com>
+#
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
+#
+# https://github.com/P3TERX/Actions-OpenWrt
+# Description: Build OpenWrt using GitHub Actions
+#
+
+name: Build RM-AX6000 official repo with cache
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+  actions: write
+
+env:
+  REPO_URL: https://github.com/openwrt/openwrt
+  REPO_BRANCH: master
+  FEEDS_CONF: device/rm-ax6000/feeds.conf.default
+  CONFIG_FILE: device/rm-ax6000/.config
+  DIY_P1_SH: device/rm-ax6000/diy-part1.sh
+  DIY_P2_SH: device/rm-ax6000/diy-part2.sh
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install g++ build-essential gawk gcc-multilib flex git gettext libncurses5-dev libssl-dev python3-distutils \
+        rsync unzip zlib1g-dev clang aria2 rename swig libpython3-dev jq subversion qemu-utils ccache libelf-dev device-tree-compiler
+        sudo -E apt-get -qq purge azure-cli ghc* zulu* llvm* firefox powershell openjdk* dotnet* google* mysql* php* android*
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+        sudo timedatectl set-timezone "$TZ"
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
+        git config --global user.email "github-actions[bot]@users.noreply.github.com'"
+        git config --global user.name "github-actions[bot]"
+        echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
+        echo "MTARGET=mediatek_filogic/xiaomi_redmi-router-ax6000" >> $GITHUB_ENV
+    - name: Clone source code
+      working-directory: /workdir
+      run: |
+        df -hT $PWD
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        
+    - name: Cache
+      uses: klever1988/cachewrtbuild@main
+      with:
+        #是否一并缓存.ccache目录，如果你启用了ccache。这是唯一的常用参数，其他三个用于除错，一般不需要调整
+        ccache: 'true'
+        #是否缓存工具链目录
+        toolchain: 'true'
+        #是否跳过工具链编译
+        skip: 'true'
+        #清空缓存
+        clean: 'false'
+        prefix: ${{ github.workspace }}/openwrt
+        mixkey: 'ax6000'
+
+    - name: Load custom feeds
+      run: |
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P1_SH
+    - name: Update feeds
+      run: cd openwrt && ./scripts/feeds update -a
+      continue-on-error: true
+
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -f -a
+
+    - name: Load custom configuration
+      run: |
+        [ -e files ] && mv files openwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        chmod +x $DIY_P2_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+        sed '$a CONFIG_ALL=y' .config
+        
+    - name: SSH connection to Actions
+      uses: P3TERX/ssh2actions@v1.0.0
+      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh != 'false') || contains(github.event.action, 'ssh')
+      env:
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+    - name: Download package
+      id: package
+      run: |
+        cd openwrt
+        make defconfig
+        make download -j8
+        
+    - name: Compile the firmware
+      id: compile
+      run: |
+        cd openwrt
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc) || make -j1 || make -j1 V=s
+        echo "::set-output name=status::success"
+        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
+        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=$(cat DEVICE_NAME)" >> $GITHUB_ENV
+        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+        
+    - name: Check space usage
+      if: (!cancelled())
+      run: df -hT
+
+
+    - name: Organize files
+      id: organize
+      continue-on-error: true
+      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+      run: |
+        shopt -s extglob
+        mkdir -p packages/aarch64_cortex-a53
+        cp -rf openwrt/bin/targets/*/*/packages/*.ipk packages/aarch64_cortex-a53 ||true
+        echo "::set-output name=status::success"
+    
+    - name: Deploy packages to server
+      uses: easingthemes/ssh-deploy@main
+      continue-on-error: true
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        ARGS: "-avzr"
+        SOURCE: packages/aarch64_cortex-a53/*
+        REMOTE_HOST: ${{ secrets.SSH_REMOTE_HOST }}
+        REMOTE_PORT: '22'
+        REMOTE_USER: ${{ secrets.SSH_REMOTE_USER }}
+        TARGET: /mnt/packages/aarch64_cortex-a53/
+        
+    - name: Upload firmware directory
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: ${{ env.FIRMWARE }}
+
+    - name: Delete workflow runs
+      uses: GitRML/delete-workflow-runs@main
+      with:
+        retain_days: 1
+        keep_minimum_runs: 3
