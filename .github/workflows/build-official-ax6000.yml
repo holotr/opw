@@ -113,13 +113,6 @@ jobs:
         chmod +x $DIY_P2_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
-        
-   # - name: Apply patches
-   #   run: |
-   #     cd openwrt
-   #     git config --global user.email "tmp@foo.bar"
-   #     git config --global user.name "tmp"
-   #     git am $GITHUB_WORKSPACE/devices/rm-ax6000/patches/*.op.patch
 
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
@@ -132,6 +125,7 @@ jobs:
       id: package
       run: |
         cd openwrt
+        make defconfig
         make download -j8
 
     - name: Compile the firmware
