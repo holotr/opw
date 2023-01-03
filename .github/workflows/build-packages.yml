@@ -113,14 +113,14 @@ jobs:
       run: |
         cd openwrt
         make defconfig
-        make download -j8
+        make -i download -j8
         
     - name: Compile the firmware
       id: compile
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        make package/compile -j$(nproc) || make package/compile -j1 || make package/compile -j1 V=s
+        make -i package/compile -j$(nproc) || make -i package/compile -j1 || make -i package/compile -j1 V=s
         echo "::set-output name=status::success"
         
     - name: Check space usage
@@ -135,6 +135,7 @@ jobs:
         shopt -s extglob
         mkdir -p packages/aarch64_cortex-a53
         cp -rf openwrt/bin/targets/*/*/packages/*.ipk packages/aarch64_cortex-a53 ||true
+        cp -rf openwrt/bin/packages/*/* packages/ ||true
         rm -rf packages/aarch64_cortex-a53/kernel*.ipk
         echo "::set-output name=status::success"
     
