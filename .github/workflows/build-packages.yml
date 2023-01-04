@@ -153,7 +153,7 @@ jobs:
     - name: Deploy packages to server
       uses: easingthemes/ssh-deploy@main
       continue-on-error: true
-      if: steps.organize.outputs.status == 'success' && !cancelled()
+      if: steps.organize.outputs.status == 'false' && !cancelled()
       with:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         ARGS: "-avzr"
@@ -162,6 +162,17 @@ jobs:
         REMOTE_PORT: '22'
         REMOTE_USER: ${{ secrets.SSH_REMOTE_USER }}
         TARGET: /mnt/packages/aarch64_cortex-a53/
+        
+    - name: Deploy packages to Driver
+      uses: andreiio/rclone-action@v1
+      continue-on-error: true
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        args: sync packages od:Packages
+      env:
+        RCLONE_ONEDRIVE_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
+        RCLONE_ONEDRIVE_DRIVE_TYPE: business
+        RCLONE_ONEDRIVE_DRIVE_ID: ${{ secrets.ONEDRIVE_DRIVE_ID }}
         
     - name: Delete current release assets
       uses: andreaswilli/delete-release-assets-action@v2.0.0
