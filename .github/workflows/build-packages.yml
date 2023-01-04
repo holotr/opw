@@ -65,17 +65,31 @@ jobs:
       with:
         repo: ${{ github.repository }}
         version: 'tags/PackagesCache'
-        file: 'openwrt.ztsd'
-        target: '/workdir/openwrt.ztsd'
+        file: 'openwrt.tar.zst'
+        target: '/workdir/openwrt.tar.zst'
         token: ${{ secrets.GITHUB_TOKEN }}
       
     - name: Clone source code
       working-directory: /workdir
       run: |
         df -hT $PWD
-        [ -e openwrt.ztsd ] && ztsd -d openwrt.ztsd && cd openwrt && git checkout -f && git pull
+        [ -e openwrt.tar.zst ] && tar -I zstd -xvf openwrt.tar.zst && cd openwrt && git checkout -f && git pull
         [ -e openwrt ] || git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        
+    - name: Cache
+      uses: klever1988/cachewrtbuild@main
+      with:
+        #是否一并缓存.ccache目录，如果你启用了ccache。这是唯一的常用参数，其他三个用于除错，一般不需要调整
+        ccache: 'true'
+        #是否缓存工具链目录
+        toolchain: 'true'
+        #是否跳过工具链编译
+        skip: 'true'
+        #清空缓存
+        clean: 'false'
+        prefix: ${{ github.workspace }}/openwrt
+        mixkey: 'ax6000'
 
     - name: Load custom feeds
       run: |
@@ -133,7 +147,7 @@ jobs:
         cp -rf openwrt/bin/targets/*/*/packages/*.ipk packages/aarch64_cortex-a53 ||true
         cp -rf openwrt/bin/packages/*/* packages/ ||true
         rm -rf packages/aarch64_cortex-a53/kernel*.ipk
-        zstd -T0 openwrt
+        tar cvfa openwrt.tar.zst /workdir/openwrt
         echo "::set-output name=status::success"
     
     - name: Deploy packages to server
@@ -163,12 +177,12 @@ jobs:
         touch release.txt
         echo "::set-output name=status::success"
 
-    - name: Upload Alpha
+    - name: Upload Cache
       uses: softprops/action-gh-release@v1
       if: steps.tag.outputs.status == 'success' && !cancelled()
       with:
         tag_name: PackagesCache
-        files: openwrt.tar.gz
+        files: openwrt.tar.zst
         prerelease: true
 
     - name: Delete workflow runs
