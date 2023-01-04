@@ -73,7 +73,7 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
-        [ -e openwrt.ztsd ] && ztsd -d openwrt.ztsd
+        [ -e openwrt.ztsd ] && ztsd -d openwrt.ztsd && cd openwrt && git checkout -f && git pull
         [ -e openwrt ] || git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
