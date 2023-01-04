@@ -130,7 +130,6 @@ jobs:
     - name: Organize files
       id: organize
       continue-on-error: true
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
         shopt -s extglob
         mkdir -p packages/aarch64_cortex-a53
