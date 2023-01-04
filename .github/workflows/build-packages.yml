@@ -170,6 +170,7 @@ jobs:
       with:
         args: sync packages od:Packages
       env:
+        RCLONE_ONEDRIVE_CLIENT_ID: od
         RCLONE_ONEDRIVE_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
         RCLONE_ONEDRIVE_DRIVE_TYPE: business
         RCLONE_ONEDRIVE_DRIVE_ID: ${{ secrets.ONEDRIVE_DRIVE_ID }}
