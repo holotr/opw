@@ -173,7 +173,9 @@ jobs:
         RCLONE_CONFIG_OD_TYPE: onedrive
         RCLONE_CONFIG_OD_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
         RCLONE_CONFIG_OD_DRIVE_ID: ${{ secrets.ONEDRIVE_DRIVE_ID }}
-        RRCLONE_CONFIG_OD_DRIVE_TYPE: business
+        RCLONE_CONFIG_OD_DRIVE_TYPE: business
+        RCLONE_ONEDRIVE_DRIVE_ID: ${{ secrets.ONEDRIVE_DRIVE_ID }}
+        RCLONE_ONEDRIVE_DRIVE_TYPE: business
         
     - name: Delete current release assets
       uses: andreaswilli/delete-release-assets-action@v2.0.0
