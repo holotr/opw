@@ -147,7 +147,7 @@ jobs:
         cp -rf openwrt/bin/targets/*/*/packages/*.ipk packages/aarch64_cortex-a53 ||true
         cp -rf openwrt/bin/packages/*/* packages/aarch64_cortex-a53/ ||true
         rm -rf packages/aarch64_cortex-a53/kernel*.ipk
-        tar czf - /workdir/openwrt | split -b 1900m -d - file
+        tar czf - /workdir/openwrt | split -b 1000m -d - file
         echo "::set-output name=status::success"
     
     - name: Deploy packages to server
