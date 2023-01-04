@@ -193,11 +193,21 @@ jobs:
 
     - name: Upload Cache
       uses: softprops/action-gh-release@v1
-      if: steps.tag.outputs.status == 'success' && !cancelled()
+      if: steps.tag.outputs.status == 'false' && !cancelled()
       with:
         tag_name: PackagesCache
         files: file*
         prerelease: true
+        
+    - name: Upload Binaries to Release
+      uses: svenstaro/upload-release-action@v2
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: PackagesCache
+        files: file*
+        overwrite: true
+        body: "This is packages do not download"
 
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main
