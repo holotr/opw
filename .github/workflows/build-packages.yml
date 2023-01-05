@@ -84,7 +84,7 @@ jobs:
         df -hT $PWD
         if [[ -e openwrt ]] ; then
           cd openwrt
-          git checkout origin/master -f
+          git reset --hard origin/master
           git pull
         else
           git clone $REPO_URL -b $REPO_BRANCH openwrt
