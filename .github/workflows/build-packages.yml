@@ -67,8 +67,11 @@ jobs:
     - name: Download packages Caches
       continue-on-error: true
       run: |
-        rclone copyto -P od:tmp/openwrt.tar.zst /openwrt.tar.zst
-        tar -I zstd -xvf openwrt.tar.zst && rm -rf openwrt.tar.zst 
+        rclone copyto -P od:tmp/openwrt.tar.zst /workdir/openwrt.tar.zst
+        cd /workdir && tar -I zstd -xvf openwrt.tar.zst && rm -rf openwrt.tar.zst 
+        if [[ -e workdir/openwrt ]] ; then
+          mv workdir/openwrt ./openwrt && rm -rf workdir
+        fi
         ls /workdir
       
     - name: Clone source code
