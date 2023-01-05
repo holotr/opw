@@ -59,16 +59,15 @@ jobs:
         echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
         echo "MTARGET=mediatek_filogic/xiaomi_redmi-router-ax6000" >> $GITHUB_ENV
         
-    - name: Download packages Caches
-      uses: andreiio/rclone-action@v1.2
-      continue-on-error: true
+    - name: Setup Rclone
+      uses: AnimMouse/setup-rclone@v1
       with:
-        args: copyto -P od:tmp/openwrt.tar.zst openwrt.tar.zst
-      env:
-        RCLONE_CONFIG_OD_TYPE: onedrive
-        RCLONE_CONFIG_OD_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
-        RCLONE_ONEDRIVE_DRIVE_ID: ${{ secrets.ONEDRIVE_DRIVE_ID }}
-        RCLONE_ONEDRIVE_DRIVE_TYPE: business
+        rclone_config: ${{ secrets.RCLONE_CONFIG }}
+        
+    - name: Download packages Caches
+      continue-on-error: true
+      run: |
+        rclone copyto -P od:tmp/openwrt.tar.zst /workdir/openwrt.tar.zst
         
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
@@ -157,28 +156,16 @@ jobs:
         echo "::set-output name=status::success"
         
     - name: Deploy packages to Driver
-      uses: andreiio/rclone-action@v1
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        args: sync -P packages od:packages
-      env:
-        RCLONE_CONFIG_OD_TYPE: onedrive
-        RCLONE_CONFIG_OD_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
-        RCLONE_ONEDRIVE_DRIVE_ID: ${{ secrets.ONEDRIVE_DRIVE_ID }}
-        RCLONE_ONEDRIVE_DRIVE_TYPE: business
+      run: |
+        rclone sync -P packages od:packages
     
     - name: Deploy Caches to Driver
-      uses: andreiio/rclone-action@v1
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        args: sync -P openwrt.tar.zst od:openwrt/tmp
-      env:
-        RCLONE_CONFIG_OD_TYPE: onedrive
-        RCLONE_CONFIG_OD_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
-        RCLONE_ONEDRIVE_DRIVE_ID: ${{ secrets.ONEDRIVE_DRIVE_ID }}
-        RCLONE_ONEDRIVE_DRIVE_TYPE: business
+      run: |
+        rclone sync -P openwrt.tar.zst od:openwrt/tmp  
 
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main
