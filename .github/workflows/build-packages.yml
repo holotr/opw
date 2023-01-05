@@ -68,7 +68,7 @@ jobs:
       continue-on-error: true
       run: |
         rclone copyto -P od:tmp/openwrt.tar.zst /workdir/openwrt.tar.zst
-        cd /workdir && tar -I zstd -xvf openwrt.tar.zst && rm -rf openwrt.tar.zst 
+        cd /workdir && tar -I zstd -xf openwrt.tar.zst && rm -rf openwrt.tar.zst 
         if [[ -e workdir/openwrt ]] ; then
           mv workdir/openwrt ./openwrt && rm -rf workdir
         fi
@@ -79,7 +79,9 @@ jobs:
       run: |
         df -hT $PWD
         if [[ -e openwrt ]] ; then
-          cd openwrt && git checkout -f && git pull
+          cd openwrt
+          git checkout origin/master -f
+          git pull
         else
           git clone $REPO_URL -b $REPO_BRANCH openwrt
         fi
