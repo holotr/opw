@@ -67,18 +67,18 @@ jobs:
     - name: Download packages Caches
       continue-on-error: true
       run: |
-        rclone copyto -P od:tmp/openwrt.tar.zst /workdir/openwrt.tar.zst
+        rclone copyto -P od:tmp/openwrt.tar.zst /openwrt.tar.zst
+        tar -I zstd -xvf openwrt.tar.zst && rm -rf openwrt.tar.zst 
+        ls /workdir
       
     - name: Clone source code
       working-directory: /workdir
       run: |
         df -hT $PWD
-        pwd
-        ls -a
-        if [[ -e openwrt.tar.zst ]] ; then
-           tar -I zstd -xvf openwrt.tar.zst && rm -rf openwrt.tar.zst && cd openwrt && git checkout -f && git pull
+        if [[ -e openwrt ]] ; then
+          cd openwrt && git checkout -f && git pull
         else
-           git clone $REPO_URL -b $REPO_BRANCH openwrt
+          git clone $REPO_URL -b $REPO_BRANCH openwrt
         fi
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         
