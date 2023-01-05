@@ -60,7 +60,7 @@ jobs:
         echo "MTARGET=mediatek_filogic/xiaomi_redmi-router-ax6000" >> $GITHUB_ENV
         
     - name: Download packages Caches
-      uses: andreiio/rclone-action@v1
+      uses: andreiio/rclone-action@v1.2
       continue-on-error: true
       with:
         args: copyto -P od:tmp/openwrt.tar.zst openwrt.tar.zst
