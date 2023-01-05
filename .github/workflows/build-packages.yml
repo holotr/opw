@@ -59,15 +59,17 @@ jobs:
         echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
         echo "MTARGET=mediatek_filogic/xiaomi_redmi-router-ax6000" >> $GITHUB_ENV
         
-    - name : Get Package Cache
-      uses: dsaltares/fetch-gh-release-asset@master
+    - name: Download packages Caches
+      uses: andreiio/rclone-action@v1
       continue-on-error: true
+      if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
-        repo: ${{ github.repository }}
-        version: 'tags/PackagesCache'
-        file: 'file*'
-        target: '/workdir/'
-        token: ${{ secrets.GITHUB_TOKEN }}
+        args: copy od:Openwrt/tmp openwrt.tar.zst ./
+      env:
+        RCLONE_CONFIG_OD_TYPE: onedrive
+        RCLONE_CONFIG_OD_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
+        RCLONE_ONEDRIVE_DRIVE_ID: ${{ secrets.ONEDRIVE_DRIVE_ID }}
+        RCLONE_ONEDRIVE_DRIVE_TYPE: business
       
     - name: Clone source code
       working-directory: /workdir
@@ -147,21 +149,15 @@ jobs:
         cp -rf openwrt/bin/targets/*/*/packages/*.ipk packages/aarch64_cortex-a53 ||true
         cp -rf openwrt/bin/packages/*/* packages/aarch64_cortex-a53/ ||true
         rm -rf packages/aarch64_cortex-a53/kernel*.ipk
-        tar czf - /workdir/openwrt | split -b 1000m -d - file
+        tar cfa openwrt.tar.zst /workdir/openwrt
         echo "::set-output name=status::success"
-    
-    - name: Deploy packages to server
-      uses: easingthemes/ssh-deploy@main
-      continue-on-error: true
-      if: steps.organize.outputs.status == 'false' && !cancelled()
+        
+    - name: Upload firmware directory
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        ARGS: "-avzr"
-        SOURCE: packages/aarch64_cortex-a53/*
-        REMOTE_HOST: ${{ secrets.SSH_REMOTE_HOST }}
-        REMOTE_PORT: '22'
-        REMOTE_USER: ${{ secrets.SSH_REMOTE_USER }}
-        TARGET: /mnt/packages/aarch64_cortex-a53/
+        name: openwrt.tar.zst
+        path: openwrt.tar.zst
         
     - name: Deploy packages to Driver
       uses: andreiio/rclone-action@v1
@@ -172,42 +168,20 @@ jobs:
       env:
         RCLONE_CONFIG_OD_TYPE: onedrive
         RCLONE_CONFIG_OD_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
-        RCLONE_CONFIG_OD_DRIVE_ID: ${{ secrets.ONEDRIVE_DRIVE_ID }}
-        RCLONE_CONFIG_OD_DRIVE_TYPE: business
         RCLONE_ONEDRIVE_DRIVE_ID: ${{ secrets.ONEDRIVE_DRIVE_ID }}
         RCLONE_ONEDRIVE_DRIVE_TYPE: business
-        
-    - name: Delete current release assets
-      uses: andreaswilli/delete-release-assets-action@v2.0.0
+    
+    - name: Deploy Caches to Driver
+      uses: andreiio/rclone-action@v1
+      continue-on-error: true
+      if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        tag: PackagesCache
-        deleteOnlyFromDrafts: false
-
-    - name: Generate release tag
-      id: tag
-      run: |
-        echo "::set-output name=release_tag::PackagesCache"
-        touch release.txt
-        echo "::set-output name=status::success"
-
-    - name: Upload Cache
-      uses: softprops/action-gh-release@v1
-      if: steps.tag.outputs.status == 'false' && !cancelled()
-      with:
-        tag_name: PackagesCache
-        files: file*
-        prerelease: true
-        
-    - name: Upload Binaries to Release
-      uses: svenstaro/upload-release-action@v2
-      if: steps.tag.outputs.status == 'success' && !cancelled()
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        tag: PackagesCache
-        file: file*
-        overwrite: true
-        body: "This is packages do not download"
+        args: sync openwrt.tar.zst od:Openwrt/tmp
+      env:
+        RCLONE_CONFIG_OD_TYPE: onedrive
+        RCLONE_CONFIG_OD_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
+        RCLONE_ONEDRIVE_DRIVE_ID: ${{ secrets.ONEDRIVE_DRIVE_ID }}
+        RCLONE_ONEDRIVE_DRIVE_TYPE: business
 
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main
