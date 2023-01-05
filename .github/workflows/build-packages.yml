@@ -63,7 +63,7 @@ jobs:
       uses: andreiio/rclone-action@v1
       continue-on-error: true
       with:
-        args: sync -P od:openwrt/tmp /workdir
+        args: copyto -P od:tmp/openwrt.tar.zst /workdir/
       env:
         RCLONE_CONFIG_OD_TYPE: onedrive
         RCLONE_CONFIG_OD_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
