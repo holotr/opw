@@ -62,7 +62,6 @@ jobs:
     - name: Download packages Caches
       uses: andreiio/rclone-action@v1
       continue-on-error: true
-      if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
         args: copy od:Openwrt/tmp /workdir
       env:
