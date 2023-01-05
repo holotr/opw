@@ -74,6 +74,7 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
+        ls -a
         if [[ -e openwrt.tar.zst ]] ; then
            tar -I zstd -xvf openwrt.tar.zst && rm -rf openwrt.tar.zst && cd openwrt && git checkout -f && git pull
         else
