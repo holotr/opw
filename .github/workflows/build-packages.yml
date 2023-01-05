@@ -74,8 +74,11 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
-        [ -e openwrt.tar.zst ] && tar -I zstd -xvf openwrt.tar.zst && rm -rf openwrt.tar.zst && cd openwrt && git checkout -f && git pull
-        [ -e openwrt ] || git clone $REPO_URL -b $REPO_BRANCH openwrt
+        if [[ -e openwrt.tar.zst ]] ; then
+           tar -I zstd -xvf openwrt.tar.zst && rm -rf openwrt.tar.zst && cd openwrt && git checkout -f && git pull
+        else
+           git clone $REPO_URL -b $REPO_BRANCH openwrt
+        fi
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         
     - name: Cache
@@ -150,13 +153,6 @@ jobs:
         rm -rf packages/aarch64_cortex-a53/kernel*.ipk
         tar cfa openwrt.tar.zst /workdir/openwrt
         echo "::set-output name=status::success"
-        
-    - name: Upload firmware directory
-      uses: actions/upload-artifact@main
-      if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        name: openwrt.tar.zst
-        path: openwrt.tar.zst
         
     - name: Deploy packages to Driver
       uses: andreiio/rclone-action@v1
