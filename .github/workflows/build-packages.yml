@@ -63,7 +63,7 @@ jobs:
       uses: andreiio/rclone-action@v1
       continue-on-error: true
       with:
-        args: copy od:Openwrt/tmp /workdir
+        args: copy od:openwrt/tmp /workdir
       env:
         RCLONE_CONFIG_OD_TYPE: onedrive
         RCLONE_CONFIG_OD_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
@@ -163,7 +163,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
-        args: sync packages od:Packages
+        args: sync packages od:packages
       env:
         RCLONE_CONFIG_OD_TYPE: onedrive
         RCLONE_CONFIG_OD_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
@@ -175,7 +175,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
-        args: sync openwrt.tar.zst od:Openwrt/tmp
+        args: sync openwrt.tar.zst od:openwrt/tmp
       env:
         RCLONE_CONFIG_OD_TYPE: onedrive
         RCLONE_CONFIG_OD_TOKEN: ${{ secrets.ONEDRIVE_TOKEN }}
