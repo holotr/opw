@@ -39,7 +39,7 @@ jobs:
       run: |
         shopt -s extglob
         cd /workdir
-        makdir tmp
+        mkdir tmp
         cd tmp
         seq 12 | xargs -i dd if=/dev/zero of=file{} bs=1M count=1000
         ls -l
