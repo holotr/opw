@@ -155,31 +155,22 @@ jobs:
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "::set-output name=status::success"
         
-    - name: Deploy firmware to server
-      uses: easingthemes/ssh-deploy@main
+    - name: Setup Rclone
+      uses: AnimMouse/setup-rclone@v1
+      with:
+        rclone_config: ${{ secrets.RCLONE_CONFIG }}
+        
+    - name: Deploy firmware to Driver
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        ARGS: "-avzr"
-        SOURCE: firmware/${{env.MTARGET}}/*
-        REMOTE_HOST: ${{ secrets.SSH_REMOTE_HOST }}
-        REMOTE_PORT: '22'
-        REMOTE_USER: ${{ secrets.SSH_REMOTE_USER }}
-        TARGET: /mnt/openwrt/firmware/${{env.MTARGET}}/
-    
-    - name: Deploy packages to server
-      uses: easingthemes/ssh-deploy@main
+      run: |
+        rclone copy firmware od:openwrt/firmware
+        
+    - name: Deploy packages to Driver
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        ARGS: "-avzr"
-        SOURCE: packages/aarch64_cortex-a53/*
-        REMOTE_HOST: ${{ secrets.SSH_REMOTE_HOST }}
-        REMOTE_PORT: '22'
-        REMOTE_USER: ${{ secrets.SSH_REMOTE_USER }}
-        TARGET: /mnt/packages/aarch64_cortex-a53/
+      run: |
+        rclone copy packages od:packages
 
     - name: Generate release tag
       id: tag
