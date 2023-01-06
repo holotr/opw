@@ -176,7 +176,7 @@ jobs:
         echo -e "$(nproc) thread compile"
         for ipk in $(ls package/feeds/${{ matrix.feed }}); do
             echo $ipk
-            make package/$ipk/compile-j$(($(nproc)+1)) || make package/$ipk/compile V=s || true
+            make package/$ipk/compile -j$(($(nproc)+1)) || make package/$ipk/compile V=s || true
         done
         echo "::set-output name=status::success"
         
