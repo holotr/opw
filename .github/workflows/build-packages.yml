@@ -80,7 +80,7 @@ jobs:
         cd /workdir 
         if [[ -e file01 ]] ; then
           cat file* > openwrt.tar.zst
-          tar -I zstd -xf openwrt.tar.zst && rm -rf openwrt.tar.zst 
+          tar -I zstd -xf openwrt.tar.zst && rm -rf openwrt.tar.zst file*
           cd openwrt && git checkout -f && git pull
         fi
         ls /workdir
