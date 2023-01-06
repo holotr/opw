@@ -42,8 +42,7 @@ jobs:
         mkdir tmp
         
         dd if=/dev/zero of=file bs=1M count=10000
-        tar cvfa openwrt.tar.zst file
-        split -b 1000m -d -a 2 openwrt.tar.zst tmp/file
+        split -b 1000m -d -a 2 file tmp/file
         ls -l
         
     - name: Delete current release assets
