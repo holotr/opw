@@ -32,13 +32,6 @@ jobs:
       uses: AnimMouse/setup-rclone@v1
       with:
         rclone_config: ${{ secrets.RCLONE_CONFIG }}
-        
-    - name: Download packages Caches
-      continue-on-error: true
-      run: |
-        rclone copyto -P --onedrive-no-versions od:tmp/openwrt.tar.zst /workdir/openwrt.tar.zst
-        ls /workdir
-        df -h
 
     - name: Organize files
       id: organize
@@ -46,6 +39,8 @@ jobs:
       run: |
         shopt -s extglob
         cd /workdir
+        makdir tmp
+        cd tmp
         seq 12 | xargs -i dd if=/dev/zero of=file{} bs=1M count=1000
         ls -l
     
