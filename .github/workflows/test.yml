@@ -41,8 +41,16 @@ jobs:
         cd /workdir
         mkdir tmp
         cd tmp
-        seq 12 | xargs -i dd if=/dev/zero of=file{} bs=1M count=1000
+        dd if=/dev/zero of=file bs=1M count=10000
+        tar cfa - ../tmp ｜ split -b 100m -d - file
         ls -l
+        
+    - name: Delete current release assets
+      uses: andreaswilli/delete-release-assets-action@v2.0.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: PackagesCache
+        deleteOnlyFromDrafts: false
     
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
@@ -52,4 +60,5 @@ jobs:
         tag: PackagesCache
         overwrite: true
         file_glob: true
+        
         
