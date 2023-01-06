@@ -42,7 +42,7 @@ jobs:
         mkdir tmp
         cd tmp
         dd if=/dev/zero of=file bs=1M count=10000
-        tar -I zstd -cf - ../tmp ｜ split -b 100m -d - file
+        tar -zcf - ../tmp ｜ split -b 100m -d -a 2 - file
         ls -l
         
     - name: Delete current release assets
