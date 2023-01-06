@@ -162,12 +162,15 @@ jobs:
         make defconfig
         make -i download -j8
         
-    - name: Compile the firmware
+    - name: Compile the package
       id: compile
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        make -i package/compile -j$(nproc) || make -i package/compile -j1 || make -i package/compile -j1 V=s
+        for ipk in $(ls package/feeds/{{ $matrix.feed }}); do
+            echo $ipk
+            make package/$ipk/compile-j$(($(nproc)+1)) || make package/$ipk/compile V=s || true
+        done
         echo "::set-output name=status::success"
         
     - name: Check space usage
