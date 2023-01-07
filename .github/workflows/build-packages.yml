@@ -95,13 +95,16 @@ jobs:
           cat file* > openwrt.tar.zst
         fi
         if [[ -e openwrt.tar.zst ]] ; then
-          tar -I zstd -xf openwrt.tar.zst && rm -rf openwrt.tar.zst file*
+          tar -I zstd -xf openwrt.tar.zst && rm -rf openwrt.tar.zst && rm -rf file*
         fi
         if [[ -e openwrt ]] ; then
-          cd openwrt && git reset --hard origin/HEAD && git pull
+          cd openwrt 
+          ls -a
           ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         fi
+        echo -e "ls workdir"
         ls /workdir
+        echo -e "ls workdir/openwrt"
         ls /workdir/openwrt
         
     - name: SSH connection to Actions
@@ -115,7 +118,7 @@ jobs:
         df -hT $PWD
         if [[ -e openwrt ]] ; then
           cd openwrt
-          git reset --hard origin/master
+          git reset --hard origin/HEAD
           git pull
         else
           git clone $REPO_URL -b $REPO_BRANCH openwrt
