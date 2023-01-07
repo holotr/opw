@@ -37,7 +37,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        feed: [packages, luci, routing, telephony, NueXini_Packages, sirpdboy, holotr]
+        feed: [luci, NueXini_Packages, sirpdboy, holotr]
 
     steps:
     - name: Checkout
@@ -71,7 +71,7 @@ jobs:
     - name : get release cache
       uses: dsaltares/fetch-gh-release-asset@master
       continue-on-error: true
-      if: matrix.feed == 'packages'
+      if: matrix.feed == 'luci'
       with:
         repo: ${{ github.repository }}
         version: 'tags/PackagesCache'
@@ -81,7 +81,7 @@ jobs:
         
     - name : get artifact cache
       uses: actions/download-artifact@v3
-      if: matrix.feed != 'packages'
+      if: matrix.feed != 'luci'
       continue-on-error: true
       with:
         name: openwrt
@@ -107,7 +107,7 @@ jobs:
       if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh != 'false') || contains(github.event.action, 'ssh')
       
     - name: Clone source code
-      if : matrix.feed == 'packages'
+      if : matrix.feed == 'luci'
       working-directory: /workdir
       run: |
         df -hT $PWD
@@ -135,7 +135,7 @@ jobs:
         mixkey: 'ax6000'
 
     - name: Load custom feeds
-      if : matrix.feed == 'packages'
+      if : matrix.feed == 'luci'
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
@@ -143,16 +143,16 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_P1_SH
         
     - name: Update feeds
-      if : matrix.feed == 'packages'
+      if : matrix.feed == 'luci'
       run: cd openwrt && ./scripts/feeds update -a
       continue-on-error: true
 
     - name: Install feeds
-      if : matrix.feed == 'packages'
+      if : matrix.feed == 'luci'
       run: cd openwrt && ./scripts/feeds install -f -a
 
     - name: Load custom configuration
-      if : matrix.feed == 'packages'
+      if : matrix.feed == 'luci'
       run: |
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
@@ -163,7 +163,7 @@ jobs:
 
     - name: Download package
       id: package
-      if : matrix.feed == 'packages'
+      if : matrix.feed == 'luci'
       run: |
         cd openwrt
         make defconfig
