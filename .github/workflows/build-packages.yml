@@ -84,7 +84,7 @@ jobs:
       if: matrix.feed != 'luci'
       continue-on-error: true
       with:
-        name: openwrt
+        name: openwrt.tar.zst
         path: /workdir/openwrt
         
     - name: unpack packages Caches
@@ -93,8 +93,9 @@ jobs:
         cd /workdir 
         if [[ -e file01 ]] ; then
           cat file* > openwrt.tar.zst
+        fi
+        if [[ -e openwrt.tar.zst ]] ; then
           tar -I zstd -xf openwrt.tar.zst && rm -rf openwrt.tar.zst file*
-          cd openwrt && git reset --hard origin/HEAD && git pull
         fi
         if [[ -e openwrt ]] ; then
           cd openwrt && git reset --hard origin/HEAD && git pull
@@ -193,6 +194,8 @@ jobs:
         cp -rf openwrt/bin/targets/*/*/packages/*.ipk packages/aarch64_cortex-a53 ||true
         cp -rf openwrt/bin/packages/*/* packages/aarch64_cortex-a53/ ||true
         rm -rf packages/aarch64_cortex-a53/kernel*.ipk
+        cd /workdir && mkdir tmp
+        tar cvfa openwrt.tar.zst openwrt
         echo "::set-output name=status::success"
         
     - name: Deploy packages to Driver
@@ -205,8 +208,8 @@ jobs:
       uses: actions/upload-artifact@v3
       if : matrix.feed != 'holotr'
       with:
-        name: openwrt
-        path: /workdir/openwrt
+        name: openwrt.tar.zst
+        path: /workdir/openwrt.tar.zst
               
     - name: pack realse cache
       id: packca
@@ -214,8 +217,6 @@ jobs:
       if : (!cancelled()) && matrix.feed == 'holotr'
       run: | 
        cd /workdir
-       mkdir tmp
-       tar cvfa openwrt.tar.zst openwrt
        split -b 1500m -d -a 2 openwrt.tar.zst tmp/file
         
     - name: Delete current release assets
