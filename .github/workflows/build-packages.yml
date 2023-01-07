@@ -99,6 +99,7 @@ jobs:
         fi
         if [[ -e openwrt ]] ; then
           cd openwrt && git reset --hard origin/HEAD && git pull
+          ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         fi
         ls /workdir
         ls /workdir/openwrt
