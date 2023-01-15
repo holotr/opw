@@ -222,6 +222,7 @@ jobs:
       run: | 
        cd /workdir
        split -b 1500m -d -a 2 openwrt.tar.zst tmp/file
+       echo "::set-output name=status::success"
         
     - name: Delete current release assets
       uses: andreaswilli/delete-release-assets-action@v2.0.0
