@@ -54,7 +54,7 @@ jobs:
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq update
         sudo -E apt-get -qq install g++ build-essential gawk gcc-multilib flex git gettext libncurses5-dev libssl-dev python3-distutils \
-        rsync unzip zlib1g-dev clang aria2 rename swig libpython3-dev jq subversion qemu-utils ccache libelf-dev device-tree-compiler
+        rsync unzip zlib1g-dev clang aria2 rename swig libpython3-dev jq subversion qemu-utils ccache libelf-dev device-tree-compiler nodejs npm
         sudo -E apt-get -qq purge azure-cli ghc* zulu* llvm* firefox powershell openjdk* dotnet* google* mysql* php* android*
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq autoremove --purge
