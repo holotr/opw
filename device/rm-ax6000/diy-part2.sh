@@ -12,7 +12,8 @@
 
 # Modify default IP
 #sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
-sed -i 's/wpad-basic-wolfssl/wpad-wolfssl/' package/feeds/NueXini_Packages/luci-app-easymesh/Makefile
+sed -i 's/wpad-basic-wolfssl/wpad-mbedtls/' package/feeds/NueXini_Packages/luci-app-easymesh/Makefile
+sed -i 's/wpad-basic-mbedtls/wpad-mbedtls/' target/linux/mediatek/filogic/target.mk
 
 # Add Package
 svn co https://github.com/coolsnowwolf/luci/trunk/applications/luci-app-turboacc feeds/luci/applications/luci-app-turboacc
