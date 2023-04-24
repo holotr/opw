@@ -21,7 +21,7 @@ permissions:
 on:
   workflow_dispatch:
   schedule:
-    - cron: 0 18 * * MON,WED,FRI
+    - cron: 0 18 * * MON,FRI
 
 jobs:
   check:
